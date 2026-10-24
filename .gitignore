@@ -1,0 +1,61 @@
+# ==================================================================
+# Keil MDK 编译产物
+# ==================================================================
+# Objects / Listings 输出目录（.o .d .crf .axf .hex .map .lst .htm ...）
+MDK-ARM/Super_Car/
+MDK-ARM/Objects/
+MDK-ARM/Listings/
+
+*.o
+*.d
+*.crf
+*.dep
+*.axf
+*.elf
+*.hex
+*.bin
+*.map
+*.lst
+*.lnp
+*.sct
+*.iex
+*.__i
+*.htm
+*.build_log.htm
+
+# ==================================================================
+# Keil 本地配置（与本机、当前用户绑定，换机器无效）
+# ==================================================================
+*.uvguix.*
+*.uvgui.*
+MDK-ARM/DebugConfig/
+MDK-ARM/JLinkLog.txt
+MDK-ARM/JLinkSettings.ini
+*.scvd
+
+# 备份文件
+*.bak
+*.orig
+
+# ==================================================================
+# 编辑器 / 系统
+# ==================================================================
+.vscode/
+.idea/
+*.swp
+*~
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# ==================================================================
+# 说明
+# ==================================================================
+# 以下文件需要纳入版本管理，不要加进忽略列表：
+#   Super_Car.ioc                CubeMX 工程文件
+#   .mxproject                   CubeMX 生成记录，删掉会导致重新生成时判断失误
+#   MDK-ARM/Super_Car.uvprojx    Keil 工程文件（编译配置、文件分组）
+#   MDK-ARM/Super_Car.uvoptx     Keil 工程选项（调试器、下载配置）
+#   MDK-ARM/startup_stm32f103xb.s 启动汇编文件（.lst 才是产物）
+#   MDK-ARM/RTE/                 Keil RTE 组件头文件
+#   Drivers/                     STM32 HAL + CMSIS，保证 clone 后可直接编译
