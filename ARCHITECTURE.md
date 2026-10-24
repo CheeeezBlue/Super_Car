@@ -71,8 +71,12 @@ main
             -> Device_Motor_Info_Typedef::Init      (x4, from Motor_Cfg)
                  -> Bsp_tb6612_Init                 (one-shot, starts TIM1 PWM)
                       -> HalPwm_Init -> HAL_TIM_PWM_Start
+       -> Bsp_Usart_Init
+            -> HalUart_Init                         (clears ORE, arms 1-byte RX IT)
   -> App_Run  (while(1), 10 ms software tick)
-       -> service_motion::Car_Run(value)
+       -> App_CmdPoll                               (every loop, outside the tick)
+            -> Bsp_Usart_GetLine -> Bsp_Usart_ParseCmd -> App_CmdHandle
+       -> service_motion::Car_Set_Differential(left, right)
             -> Device_Motor_Info_Typedef::Set_Value (x4)
                  -> Bsp_tb6612_SetMotor
                       -> HalGpio_Write / HalPwm_SetDuty
@@ -81,12 +85,31 @@ main
                  -> HalEncoder_ReadDelta -> TIM3 / TIM4 CNT
   -> App_Debug
        -> service_motion::Debug_Car_Get_Info
-       -> USART2_Vofa_Justfloat_Transmit (8 channels)
+       -> Bsp_Usart_Vofa_Transmit8 (8 channels)
 ```
 
 `App_Stop` -> `service_motion::Car_Stop` -> `Device_Motor_Info_Typedef::Stop`.
 Note that `Stop()` currently forwards to `Bsp_tb6612_StopAll()`, so stopping a
 single wheel stops all four.
+
+## USART split
+
+| Layer | File | Owns |
+|---|---|---|
+| HAL | `HAL/Src/hal_uart.c` | Blocking TX, 256-byte RX ring buffer, `HAL_UART_RxCpltCallback` / `HAL_UART_ErrorCallback`, ORE recovery |
+| BSP | `BSP/Src/bsp_usart.cpp` | JustFloat framing (3 / 8 channels), line assembly, text command parsing |
+| Application | `Application/Src/app.cpp` | Command dispatch (`App_CmdHandle`) and the current left/right command state |
+
+`HalUart_Init()` must clear ORE before arming the interrupt: bytes received
+while RX was not armed leave ORE set, and it never clears by itself.
+
+The HAL layer knows nothing about protocols, and the BSP layer knows nothing
+about the car. Adding a command means touching `Bsp_Usart_ParseCmd` (new token)
+plus `App_CmdHandle` (new behaviour); the ring buffer and the ISR stay untouched.
+
+Text replies and the JustFloat stream share USART2. A text reply injected into
+the binary stream makes VOFA+ show one garbage frame before it realigns on the
+next frame tail. Moving text replies to USART3 removes the interference.
 
 ## Motor command convention
 

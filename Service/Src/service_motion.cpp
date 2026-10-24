@@ -54,6 +54,20 @@ void service_motion::Car_Run(int16_t value)
 
 
 /**
+ * @brief 电机服务类：左右差速接口实现
+ * @param left:  左侧（FL / RL）指令 -100% ~ 100%
+ * @param right: 右侧（FR / RR）指令 -100% ~ 100%
+ */
+void service_motion::Car_Set_Differential(int16_t left, int16_t right)
+{
+    Device_Motor[WHEEL_FL].Set_Value(left);
+    Device_Motor[WHEEL_FR].Set_Value(right);
+    Device_Motor[WHEEL_RL].Set_Value(left);
+    Device_Motor[WHEEL_RR].Set_Value(right);
+}
+
+
+/**
  * @brief 电机服务类：电机停止接口实现
  */
 void service_motion::Car_Stop()

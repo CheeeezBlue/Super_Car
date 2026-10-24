@@ -23,6 +23,7 @@ private:
 public:
     void Car_Init();
     void Car_Run(int16_t value);
+    void Car_Set_Differential(int16_t left, int16_t right);
     void Car_Stop();
     void Car_Update();
     void Car_Reset();

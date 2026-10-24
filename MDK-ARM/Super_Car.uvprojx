@@ -470,6 +470,11 @@
               <FileType>8</FileType>
               <FilePath>../BSP/Src/bsp_tb6612.cpp</FilePath>
             </File>
+            <File>
+              <FileName>bsp_usart.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>../BSP/Src/bsp_usart.cpp</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

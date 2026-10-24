@@ -44,6 +44,9 @@
 > `STBY` 由固件之外的硬件拉高（3.3 V）。若悬空，TB6612 输出为高阻，程序再对也不转。
 > `VM` 必须供电，且与主控共地。
 
+完整的按轮位接线表、TB6612 公共信号、CubeMX 各外设参数（TIM1 / TIM3 / TIM4 / I2C1 / USART）见
+**[Docs/First_Board_Pins.md](Docs/First_Board_Pins.md)**。
+
 ---
 
 ## 软件分层
@@ -64,22 +67,26 @@
 ```text
 main
   └─ App_Init
-       └─ service_motion::Car_Init
-            ├─ Device_Motor_Info_Typedef::Init      ×4  (装配表 Motor_Cfg)
-            │    └─ Bsp_tb6612_Init                 (一次性，启动 TIM1 PWM)
-            └─ Device_Encoder_Info_Typedef::Init    ×2  (装配表 Encoder_Cfg)
-                 └─ HalEncoder_Init                 (一次性，启动 TIM3/TIM4)
+       ├─ service_motion::Car_Init
+       │    ├─ Device_Motor_Info_Typedef::Init      ×4  (装配表 Motor_Cfg)
+       │    │    └─ Bsp_tb6612_Init                 (一次性，启动 TIM1 PWM)
+       │    └─ Device_Encoder_Info_Typedef::Init    ×2  (装配表 Encoder_Cfg)
+       │         └─ HalEncoder_Init                 (一次性，启动 TIM3/TIM4)
+       └─ Bsp_Usart_Init
+            └─ HalUart_Init                         (清 ORE，挂单字节接收中断)
 
   └─ while (1)
-       ├─ App_Run   (10 ms 软定时)
-       │    ├─ service_motion::Car_Run(value)
+       ├─ App_Run
+       │    ├─ App_CmdPoll                          (每圈都跑，不占控制周期)
+       │    │    └─ Bsp_Usart_GetLine → ParseCmd → App_CmdHandle
+       │    ├─ service_motion::Car_Set_Differential(left, right)
        │    │    └─ Device_Motor_Info_Typedef::Set_Value   ×4
        │    │         └─ Bsp_tb6612_SetMotor → HalGpio_Write / HalPwm_SetDuty
        │    └─ service_motion::Car_Update
        │         └─ Device_Encoder_Info_Typedef::Info_Update ×2
        │              └─ HalEncoder_ReadDelta → TIM3 / TIM4 CNT
        └─ App_Debug
-            └─ Debug_Car_Get_Info → USART2_Vofa_Justfloat_Transmit
+            └─ Debug_Car_Get_Info → Bsp_Usart_Vofa_Transmit8
 ```
 
 `Bsp_tb6612_Init()` 与 `HalEncoder_Init()` 都是**一次性板级初始化**：`HAL_TIM_PWM_Start` / `HAL_TIM_Encoder_Start` 会拒绝已在运行的通道并返回 `HAL_ERROR`，重复调用会掉进 `Error_Handler()`，因此两者内部都带 `static` 守卫。
@@ -95,11 +102,13 @@ Super_Car/
 ├── Device/          device_motor.*           电机抽象
 │                    device_encoder.*         编码器抽象
 ├── BSP/             bsp_tb6612.*             TB6612 板级映射
+│                    bsp_usart.*              VOFA 组帧 + 命令行解析
 ├── HAL/             hal_pwm / hal_gpio / hal_encoder / hal_uart / hal_time
 ├── Config/          car_config.h             全部可调参数集中于此
 ├── Core/            CubeMX 生成（main / tim / gpio / usart / i2c）
 ├── Drivers/         STM32 HAL + CMSIS
 ├── MDK-ARM/         Keil 工程
+├── Docs/            详细引脚表与 CubeMX 配置
 ├── Super_Car.ioc    CubeMX 工程文件
 └── ARCHITECTURE.md  分层规则与设计约束
 ```
@@ -146,15 +155,41 @@ Super_Car/
 
 ---
 
+## 串口命令
+
+**USART2 / 115200 / 8-N-1**，每条命令以 `\n` 或 `\r\n` 结束（`\r` 被忽略）。
+
+| 命令 | 作用 | 示例 |
+|---|---|---|
+| `SPD:<v>` | 左右同速，`v` 取 `-100..100` | `SPD:50` |
+| `L:<v> R:<v>` | 左右差速，可只给一侧 | `L:60 R:40` |
+| `O:<v>` | 开环输出（同 `SPD`，语义上用于台架） | `O:40` |
+| `STOP` | 停车并清空编码器数据 | `STOP` |
+| `?` | 查询：指令 / 编码器增量 / 脉冲速度 | `?` |
+
+上电后默认 **停止**，必须发命令才动。台架自检可把 `car_config.h` 的
+`CAR_STARTUP_MOTOR_TEST` 置 `1`，配合 `CAR_STARTUP_TEST_COMMAND` 设定开机占空比。
+
+`?` 的回复形如：
+
+```text
+L:50 R:50 ENC:38,-12 SPD:3800,-1200
+```
+
+> 文本回复和 JustFloat 二进制流共用 USART2。发命令时 VOFA+ 会看到一帧乱码，
+> 下一帧自动对齐；要彻底干净，把文本回复改到 USART3（已预留）。
+
+---
+
 ## 当前进度
 
 - [x] TIM1 四路 PWM（20 kHz）+ TB6612 四通道驱动
 - [x] 电机分层抽象（BSP / Device / Service）
 - [x] TIM3 / TIM4 正交编码器采样，10 ms 差分测速
 - [x] USART2 调试输出，VOFA+ 8 通道
+- [x] 串口接收中断（环形缓冲）+ 行命令解析
 - [ ] 速度闭环（PID）
 - [ ] 八路灰度循迹与状态机
-- [ ] 串口命令解析
 
 ---
 
@@ -163,4 +198,5 @@ Super_Car/
 - `Device_Motor_Info_Typedef::Stop()` 转调 `Bsp_tb6612_StopAll()`，停一个轮子会停掉四个。
 - `Set_Target_Speed()` / `Set_Actual_Speed()` 目前只有声明，尚未实现。
 - 只有两路编码器，前左 / 前右轮速度是**推算值**，不是实测值。
-- 开环阶段 `App_Run()` 以固定 20 % 占空比驱动四轮，首次上电请**把车架起来**。
+- 上电默认停机，需通过串口命令或 `CAR_STARTUP_MOTOR_TEST` 才输出；首次上电请**把车架起来**。
+- 命令解析用 `atoi`，非法输入按 0 处理，不做范围校验（超出 `±100` 由 Device 层限幅兜底）。

@@ -7,16 +7,18 @@
 extern "C" {
 #endif
 
-/* USART2 */
+/* 接收环形缓冲区大小，必须是 2 的幂 */
+#define HAL_UART_RX_BUFFER_SIZE    256U
+
+/* USART2：发送（阻塞） */
 void HalUart_DebugWrite(const uint8_t *data, uint16_t length);
 void HalUart_DebugPrintf(const char *format, ...);
-void USART_Vofa_Justfloat_Transmit( float SendValue1,
-                                    float SendValue2,
-                                    float SendValue3);
-void USART2_Vofa_Justfloat_Transmit(float value1,float value2,
-                                    float value3,float value4,
-                                    float value5,float value6,
-                                    float value7,float value8);
+
+/* USART2：接收（中断 + 环形缓冲区） */
+void     HalUart_Init(void);
+uint16_t HalUart_Available(void);
+uint8_t  HalUart_ReadByte(uint8_t *byte);
+void     HalUart_Flush(void);
 
 #ifdef __cplusplus
 }
