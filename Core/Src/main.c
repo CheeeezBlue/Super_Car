@@ -109,8 +109,7 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     App_Run();
-    App_Debug();
-    HAL_Delay(1);
+
   }
   /* USER CODE END 3 */
 }

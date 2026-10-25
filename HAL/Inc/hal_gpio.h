@@ -14,6 +14,7 @@ typedef struct
 } HalGpioPin_t;
 
 void HalGpio_Write(const HalGpioPin_t *pin, GPIO_PinState state);
+GPIO_PinState HalGpio_Read(const HalGpioPin_t *pin);
 
 #ifdef __cplusplus
 }

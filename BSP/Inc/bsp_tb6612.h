@@ -22,7 +22,7 @@ typedef enum
 
 void Bsp_tb6612_Init(void);
 void Bsp_tb6612_SetMotor(BspTb6612Motor_t motor, int16_t command);
-void Bsp_tb6612_StopAll(void);
+void Bsp_tb6612_Stop(BspTb6612Motor_t motor);
 
 #ifdef __cplusplus
 }

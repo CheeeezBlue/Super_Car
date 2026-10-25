@@ -336,7 +336,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F103xB</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;../Application/Inc;../Service/Inc;../Device/Inc;../BSP/Inc;../HAL/Inc;../Config/Inc;../Drivers/STM32F1xx_HAL_Driver/Inc;../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32F1xx/Include;../Drivers/CMSIS/Include</IncludePath>
+              <IncludePath>../Core/Inc;../Application/Inc;../Service/Inc;../Device/Inc;../BSP/Inc;../HAL/Inc;../Config/Inc;../Components/Controller;../Components/Algorithm;../Drivers/STM32F1xx_HAL_Driver/Inc;../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32F1xx/Include;../Drivers/CMSIS/Include</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -460,6 +460,11 @@
               <FileType>8</FileType>
               <FilePath>../Device/Src/device_encoder.cpp</FilePath>
             </File>
+            <File>
+              <FileName>device_grayscale.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>../Device/Src/device_grayscale.cpp</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -474,6 +479,26 @@
               <FileName>bsp_usart.cpp</FileName>
               <FileType>8</FileType>
               <FilePath>../BSP/Src/bsp_usart.cpp</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_grayscale.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>../BSP/Src/bsp_grayscale.cpp</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Components</GroupName>
+          <Files>
+            <File>
+              <FileName>PID.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../Components/Controller/PID.c</FilePath>
+            </File>
+            <File>
+              <FileName>LPF.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../Components/Algorithm/LPF.c</FilePath>
             </File>
           </Files>
         </Group>

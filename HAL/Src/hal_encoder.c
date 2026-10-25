@@ -57,16 +57,6 @@ int16_t HalEncoder_ReadDelta(EncoderPos_t encoder)
     return delta;
 }
 
-uint16_t HalEncoder_ReadCount(EncoderPos_t encoder)
-{
-    if (encoder >= ENCODER_COUNT)
-    {
-        return 0U;
-    }
-
-    return (uint16_t)__HAL_TIM_GET_COUNTER(encoder_handles[encoder]);
-}
-
 void HalEncoder_Reset(EncoderPos_t encoder)
 {
     if (encoder >= ENCODER_COUNT)

@@ -17,7 +17,6 @@ typedef enum
 
 void HalEncoder_Init(void);
 int16_t HalEncoder_ReadDelta(EncoderPos_t encoder);
-uint16_t HalEncoder_ReadCount(EncoderPos_t encoder);
 void HalEncoder_Reset(EncoderPos_t encoder);
 
 #ifdef __cplusplus

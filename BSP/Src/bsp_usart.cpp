@@ -22,30 +22,6 @@ void Bsp_Usart_Init(void)
 
 
 /**
- * @brief  VOFA+ JustFloat 发送（3 通道）
- */
-void Bsp_Usart_Vofa_Transmit3(float value1, float value2, float value3)
-{
-    static uint8_t tx_buffer[16];
-
-    const float values[3] = { value1, value2, value3 };
-
-    for (uint8_t channel = 0U; channel < 3U; ++channel)
-    {
-        memcpy(&tx_buffer[channel * 4U], &values[channel], sizeof(float));
-    }
-
-    /* JustFloat 帧尾 0x7F800000（小端） */
-    tx_buffer[12] = 0x00U;
-    tx_buffer[13] = 0x00U;
-    tx_buffer[14] = 0x80U;
-    tx_buffer[15] = 0x7FU;
-
-    HalUart_DebugWrite(tx_buffer, (uint16_t)sizeof(tx_buffer));
-}
-
-
-/**
  * @brief  VOFA+ JustFloat 发送（8 通道）
  */
 void Bsp_Usart_Vofa_Transmit8(float value1, float value2,
@@ -134,28 +110,20 @@ uint8_t Bsp_Usart_GetLine(char *buffer, uint16_t maxlen)
 /**
  * @brief  文本命令解析
  * @note   支持的格式：
- *           SPD:50          左右同速
- *           L:50 R:30       左右差速（可只给一侧）
- *           R:30 L:50       同上，顺序无关
- *           O:40            开环输出
+ *           SPD:50          目标速度（百分比）
+ *           MD:3            切换运行模式 0=IDLE 1=MANUAL 2=STRAIGHT 3=LINE
  *           STOP            停车
  *           ?               查询状态
  */
 void Bsp_Usart_ParseCmd(const char *line, BspUsartCmd_t *cmd)
 {
-    const char *other;
-
     if ((line == 0) || (cmd == 0))
     {
         return;
     }
 
-    cmd->type      = USART_CMD_NONE;
-    cmd->left      = 0;
-    cmd->right     = 0;
-    cmd->value     = 0;
-    cmd->left_set  = 0U;
-    cmd->right_set = 0U;
+    cmd->type  = USART_CMD_NONE;
+    cmd->value = 0;
 
     if (line[0] == '\0')
     {
@@ -167,36 +135,10 @@ void Bsp_Usart_ParseCmd(const char *line, BspUsartCmd_t *cmd)
         cmd->type  = USART_CMD_SPD;
         cmd->value = (int16_t)atoi(line + 4);
     }
-    else if (strncmp(line, "O:", 2) == 0)
+    else if (strncmp(line, "MD:", 3) == 0)
     {
-        cmd->type  = USART_CMD_OPEN;
-        cmd->value = (int16_t)atoi(line + 2);
-    }
-    else if (strncmp(line, "L:", 2) == 0)
-    {
-        cmd->type = USART_CMD_LR;
-        cmd->left = (int8_t)atoi(line + 2);
-        cmd->left_set = 1U;
-
-        other = strstr(line, "R:");
-        if (other != 0)
-        {
-            cmd->right = (int8_t)atoi(other + 2);
-            cmd->right_set = 1U;
-        }
-    }
-    else if (strncmp(line, "R:", 2) == 0)
-    {
-        cmd->type = USART_CMD_LR;
-        cmd->right = (int8_t)atoi(line + 2);
-        cmd->right_set = 1U;
-
-        other = strstr(line, "L:");
-        if (other != 0)
-        {
-            cmd->left = (int8_t)atoi(other + 2);
-            cmd->left_set = 1U;
-        }
+        cmd->type  = USART_CMD_MODE;
+        cmd->value = (int16_t)atoi(line + 3);
     }
     else if (strncmp(line, "STOP", 4) == 0)
     {

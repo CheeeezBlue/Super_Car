@@ -95,12 +95,7 @@ void Bsp_tb6612_SetMotor(BspTb6612Motor_t motor, int16_t command)
     HalPwm_SetDuty(config->pwm, command_to_compare(effective_command));
 }
 
-void Bsp_tb6612_StopAll(void)
+void Bsp_tb6612_Stop(BspTb6612Motor_t motor)
 {
-    uint32_t i;
-
-    for (i = 0U; i < BSP_TB6612_MOTOR_COUNT; ++i)
-    {
-        Bsp_tb6612_SetMotor((BspTb6612Motor_t)i, 0);
-    }
+    Bsp_tb6612_SetMotor(motor, 0);
 }
